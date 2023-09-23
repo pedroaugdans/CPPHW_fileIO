@@ -2,16 +2,15 @@
 #include <fstream>
 #include <string>
 #include <array>
+#include <vector>
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #include <experimental\filesystem>
 
 #define BUFFER_SIZE_MAX_SIZE 131072
 
-void Write(const std::string&& name) {
-	std::ofstream out{name};
-	out << "Hello world" << std::endl;
-	out << 10 << std::endl; 
-	out.close();
+int Write(std::vector<char> cpy_buf, std::fstream& dest) {
+	dest.write(cpy_buf.data(), cpy_buf.size() - 1);
+	return 0;
 }
 
 void copy_utility(std::fstream source, std::fstream dest) {
@@ -28,17 +27,16 @@ int simple_copy(std::fstream& source, std::fstream& dest) {
 
 
 void save_utility(std::string source, std::string dest) {
-
+	
 }
 
 
-int Read(std::array<char, BUFFER_SIZE_MAX_SIZE> cpy_buf,const std::string&& name, std::fstream& source) {
-	std::ifstream input{ name };
-
-	if (input.fail()) { // can also use isopen()
-		std::cout << "Could not open the file" << std::endl;
-		return -1;
-	}
+int Read(std::vector<char>& cpy_buf, std::fstream& source) {
+	source.seekg(0, source.end);
+	int length = source.tellg();
+	cpy_buf.resize(length);
+	source.seekg(0, source.beg);
+	source.read(cpy_buf.data(), length);
 	return 0;
 }
 
@@ -59,7 +57,18 @@ int close_file(std::fstream& file) {
 int main() {
 	std::fstream input;
 	std::fstream output;
-	std::array<char, BUFFER_SIZE_MAX_SIZE> cpy_buff{};
+	std::vector<char> cpy_buff{};
+
+	if (Open_file("data.txt", input) || Open_file("data_3.txt", output)) {
+		printf("failed to open files");
+		return -1;
+	}
+
+	Read(cpy_buff,input);
+
+	std::cout << cpy_buff.data() << std::endl;
+
+	Write(cpy_buff, output);
 
 	//if (!Open_file("data.txt",input) && !Open_file("data_2.txt", output)) {
 	//	printf("Source and destination opened, reading");
@@ -68,6 +77,6 @@ int main() {
 	//}
 	//else { printf("Unable to open the source or destination file"); return -1; }
 
-
+	input.close(); output.close();
 	return 0;
 }
